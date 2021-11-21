@@ -72,7 +72,7 @@ public class murenaController : MonoBehaviour
         _colisionDetected = false;
       
         _murenaEyeLight.SetActive(false);
-        Debug.Log(_attacPos + "atacpos");
+        
     }
 
     // Update is called once per frame
@@ -80,11 +80,7 @@ public class murenaController : MonoBehaviour
     {
         diverDetection();
 
-        Debug.Log(_attackState + "attstate");
-        Debug.Log(_endAttackState + "endattstate");
-        Debug.Log(_initialPos + "init");
-        Debug.Log(_actualPos + "actusl");
-        Debug.Log(_diverDetected + "diverdet");
+        
         if (_diverDetected && !_attackState && !_endAttackState )
         {
             StartCoroutine(murenaWaiting());
@@ -106,7 +102,7 @@ public class murenaController : MonoBehaviour
 
     IEnumerator murenaWaiting()
     {
-        Debug.Log("waiting");
+        
         _murenaEyeLight.SetActive(true);
         yield return new WaitForSeconds(0.5f);
         _attackState = true;
@@ -130,9 +126,7 @@ public class murenaController : MonoBehaviour
             else if(_direction == 270)
                 transform.position = transform.position + new Vector3(0, -0.1f, 0);
             _animator.Play("murenaSwim");
-            //Debug.Log("attack ok" + transform.position + new Vector3 (0,  1*Time.deltaTime, 0));
-            Debug.Log("vect" + transform.position);
-
+          
         }
         else if (((_actualPos > _attacPos) && (_direction == 0 || _direction == 90))
             || ((_actualPos < _attacPos) && (_direction == 180 || _direction == 270)))
@@ -190,7 +184,6 @@ public class murenaController : MonoBehaviour
     void diverDetection()
     {
 
-
         if (_direction == 0 || _direction == 180)
         {
             _detectScaleVector = new Vector2(gameObject.transform.localScale.x * 2, gameObject.transform.localScale.y * 0.9f);
@@ -235,12 +228,5 @@ public class murenaController : MonoBehaviour
         _endAttackState = true;
         _attackState = false;
     }
-        void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        //Check that it is being run in Play Mode, so it doesn't try to draw this in Editor mode
-        if (true)
-            //Draw a cube where the OverlapBox is (positioned where your GameObject is as well as a size)
-            Gizmos.DrawWireCube(_detectVector, _detectScaleVector);
-    }
+    
 }

@@ -37,12 +37,10 @@ public class fishController : MonoBehaviour
     float _direction;
     private float _horizontalMove;
     private Rigidbody2D _fish;
-    private BoxCollider2D _boxColider;
     private bool _visibility;
     void Start()
     {
         _fish = GetComponent<Rigidbody2D>();
-        _boxColider = GetComponent<BoxCollider2D>();
         _animator = GetComponent<Animator>();
         _fishRenderer = GetComponent<SpriteRenderer>();
         _initialXPos = _fish.position.x;
