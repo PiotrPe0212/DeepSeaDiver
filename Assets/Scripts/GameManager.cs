@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,9 +20,9 @@ public class GameManager : MonoBehaviour
     public AudioSource GameMusic;
     public AudioSource ClickSound;
 
-    string[] _levels = new string[] { "Level44" };
+    string[] _levels;
 
-    float[] _winConditions = new float[] { 1, 1, 1, 2, 3 };
+    float[] _winConditions;
 
     float _highestDepth;
     bool isSwitching;
@@ -74,6 +75,12 @@ public class GameManager : MonoBehaviour
 
     private bool _chest;
 
+    public GameManager()
+    {
+        _levels = new string[] { "Level11","Level22","Level33","Level44" };
+        _winConditions = new float[] { 1, 1, 2, 3 };
+    }
+
     public bool NearChest
     {
         get { return _chest; }
@@ -82,6 +89,13 @@ public class GameManager : MonoBehaviour
             _chest = value;
         }
     }
+
+    public event Action InitGame;
+    public event Action LoadLevel;
+    public event Action ResetLevel;
+    public event Action PauseGame;
+    public event Action EndGame;
+    
 
     public void PlayClicked()
     {
@@ -206,6 +220,7 @@ public class GameManager : MonoBehaviour
                 }
                 SceneManager.LoadScene(_levels[_currentLevel - 1], LoadSceneMode.Additive);
                 GamePanel.SetActive(true);
+                parametersReset();
                 break;
             case State.PAUSE:
                 Time.timeScale = 0;
@@ -223,10 +238,10 @@ public class GameManager : MonoBehaviour
     {
 
       
-        Debug.Log(_death);
+        //Debug.Log(_death);
         if (!isSwitching)
         {
-            Debug.Log(_state);
+            //Debug.Log(_state);
             switch (_state)
             {
                 case State.MENU:

@@ -1,10 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class diverAnimationController : MonoBehaviour
 {
-
+    [SerializeField] private Diver _diver;
     private Animator _animator;
     private SpriteRenderer diverRenderer;
 
@@ -22,15 +23,27 @@ public class diverAnimationController : MonoBehaviour
     private bool _reset;
     public AudioSource _stepAudio;
     public AudioSource _fallHitAudio;
-    public enum AnimationState { WAITING, WALKING, FALLINIT, FALLING, UPINIT, UP, GROUNDHIT, JETPACK, DEATH }
+    public enum AnimationState { WAITING, WALKING, FALLINIT, FALLING, JUMP, UP, GROUNDHIT, JETPACK, DEATH }
     AnimationState _state;
     private bool isSwitching;
+    private bool _startJumpAnimation = false;
+    public event Action AnimationEnded;
     void Start()
     {
 
         diverRenderer = GetComponent<SpriteRenderer>();
         _animator = GetComponent<Animator>();
         SwitchState(AnimationState.WAITING);
+    }
+
+    private void Awake()
+    {
+        _diver.Jump += JumpAnimation;
+    }
+
+    private void OnDestroy()
+    {
+        _diver.Jump += JumpAnimation;
     }
 
     public void SwitchState(AnimationState newState, float delay = 0)
@@ -77,9 +90,9 @@ public class diverAnimationController : MonoBehaviour
                 _fallHitAudio.PlayOneShot(_fallHitAudio.clip, 1);
                 break;
 
-            case AnimationState.UPINIT:
+            case AnimationState.JUMP:
                 _endOfHitGroundAnim = false;
-                _animator.Play("upInit");
+                _animator.Play("Jump");
                 break;
 
             case AnimationState.UP:
@@ -103,12 +116,12 @@ public class diverAnimationController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        _isUpPressed = Diver.isUpPressed;
-        _isGrounded = Diver.isGrounded;
-        _horizontalMove = Diver.horizontalMove;
-        _isVerticalMove = Diver.verticalMove;
+        _isUpPressed = Diver._jumping;
+        _isGrounded = Diver.IsGrounded;
+        _horizontalMove = Diver.HorizontalMove;
+        _isVerticalMove = Diver.VerticalMove;
         _jetpackUse = Diver._jetpackUse;
-        _bigHight = Diver.willGroundHitAnim;
+        _bigHight = Diver.WillGroundHitAnim;
         _deathSet = GameObject.Find("GameManager").GetComponent<GameManager>()._death;
         _reset = GameObject.Find("GameManager").GetComponent<GameManager>()._resetLevel;
         if (_horizontalMove == -1)
@@ -131,9 +144,9 @@ public class diverAnimationController : MonoBehaviour
                         SwitchState(AnimationState.WALKING);
                     }
 
-                    if (_isUpPressed)
+                    if (_startJumpAnimation)
                     {
-                        SwitchState(AnimationState.UPINIT);
+                        SwitchState(AnimationState.JUMP);
                     }
 
                     if (_deathSet)
@@ -154,9 +167,9 @@ public class diverAnimationController : MonoBehaviour
                         SwitchState(AnimationState.FALLINIT);
                     }
 
-                    if ((_isUpPressed || _jetpackUse))
+                    if (_startJumpAnimation)
                     {
-                        SwitchState(AnimationState.UPINIT);
+                        SwitchState(AnimationState.JUMP);
                     }
 
                     if (_deathSet)
@@ -179,9 +192,9 @@ public class diverAnimationController : MonoBehaviour
                     else if(_isGrounded &&  !_bigHight)
                         SwitchState(AnimationState.WAITING);
 
-                    if (_isUpPressed || _jetpackUse)
+                    if (_startJumpAnimation)
                     {
-                        SwitchState(AnimationState.UPINIT);
+                        SwitchState(AnimationState.JUMP);
                     }
 
                     if (_deathSet)
@@ -205,7 +218,7 @@ public class diverAnimationController : MonoBehaviour
                     break;
 
 
-                case AnimationState.UPINIT:
+                case AnimationState.JUMP:
                     if (_endOfAnimation)
                     {
                         SwitchState(AnimationState.UP);
@@ -213,7 +226,7 @@ public class diverAnimationController : MonoBehaviour
                     break;
 
                 case AnimationState.UP:
-                    if (!_isGrounded  && !_isUpPressed)
+                    if (!_isGrounded  && !_isUpPressed )
                     {
                         SwitchState(AnimationState.FALLINIT);
                     }
@@ -278,7 +291,8 @@ public class diverAnimationController : MonoBehaviour
                 break;
 
 
-            case AnimationState.UPINIT:
+            case AnimationState.JUMP:
+                _startJumpAnimation = false;
                 _endOfAnimation = false;
                 _startUp = false;
                 break;
@@ -301,7 +315,12 @@ public class diverAnimationController : MonoBehaviour
     void EndOfAnimation()
     {
         _endOfAnimation = true;
+        AnimationEnded();
 
     }
 
+    private void JumpAnimation()
+    {
+        _startJumpAnimation = true;
+    }
 }

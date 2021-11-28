@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class Diver : MonoBehaviour
@@ -10,93 +12,96 @@ public class Diver : MonoBehaviour
     public float BustedUpForce = 400;
     public float RightForce = 40;
     public float BustedRightForce = 200;
-    private float Timer = 0f;
-    private float JetpackTimer = 0f;
     public AudioSource bubleSound;
-    private Rigidbody2D player;
+    private Rigidbody2D _player;
     private BoxCollider2D _boxCollider;
     private GameObject _bubles;
-    private float prevVerticvalPos;
-  
-    public static bool _jetpackCooldownState;
+    private float _prevVerticvalPos;
+    public static bool _jumping;
     [SerializeField]
     private LayerMask platformLayerMask;
 
-    private Vector2 movement;
-    public static bool isUpPressed = false;
-    public static bool gettingUp = false;
-    public static float horizontalMove = 0f;
-    public static bool isGrounded;
-    public static bool bigHight;
-    public static float verticalMove;
-    public static float verticalPos;
+    [SerializeField] private diverAnimationController _diverAnimationController;
+    private Vector2 _movement;
+    public static bool UpDoublePress = false ;
+    public static float HorizontalMove = 0f;
+    public static bool IsGrounded;
+    public static bool BigHight;
+    public static float VerticalMove;
+    public static float VerticalPos;
     public static bool _jetpackUse;
-    public static bool willGroundHitAnim;
-   
+    public static bool WillGroundHitAnim;
+    private bool _endOfAnimation =false;
+
+
+    public event Action JetPack;
+    public event Action Jump;
+
+    public event Action GetDamage;
+    
 
     void Start()
     {
         Instance = this;
-        player = GetComponent<Rigidbody2D>();
+        _player = GetComponent<Rigidbody2D>();
         _boxCollider = GetComponent<BoxCollider2D>();
         _bubles = GameObject.Find("diver/bubles");
-        prevVerticvalPos = player.position.y;
+        _prevVerticvalPos = _player.position.y;
         _bubles.SetActive(false);
-        _jetpackCooldownState = false;
-      
+    }
 
-        // _jetPackCooldownBulb.SetActive(false);
+    private void Awake()
+    {
+        _diverAnimationController.AnimationEnded += AnimationEnd;
+    }
+    private void OnDestroy()
+    {
+        _diverAnimationController.AnimationEnded -= AnimationEnd;
     }
 
     void Update()
     {
         
-        horizontalMove = Input.GetAxisRaw("Horizontal");
-        verticalMove = Input.GetAxisRaw("Vertical");
-        if (isUpPressed == false)
+        HorizontalMove = Input.GetAxisRaw("Horizontal");
+        VerticalMove = Input.GetAxisRaw("Vertical");
+        if (_jumping && !UpDoublePress && Input.GetButtonDown("Jump"))
         {
-            if (Input.GetKey("up"))
-                isUpPressed = true;
+            UpDoublePress = true;
         }
-        if (!Input.GetKey("up"))
-            isUpPressed = false;
-       
-
     }
     void FixedUpdate()
     {
-        Debug.Log(UpForce);
-       
-        verticalPos = player.position.y - prevVerticvalPos;
-        prevVerticvalPos = player.position.y;
+        VerticalPos = _player.position.y - _prevVerticvalPos;
+        _prevVerticvalPos = _player.position.y;
 
         GroundCheck();
        
-        if (!bigHight && !willGroundHitAnim)
-            willGroundHitAnim = true;
-        else if (willGroundHitAnim && diverAnimationController._endOfHitGroundAnim)
-            willGroundHitAnim = false;
+        if (!BigHight && !WillGroundHitAnim)
+            WillGroundHitAnim = true;
+        else if (WillGroundHitAnim && diverAnimationController._endOfHitGroundAnim)
+            WillGroundHitAnim = false;
 
         if (OxygenCounter.Instance)
             OxygenCounter.Instance.Jetpack = _jetpackUse;
-
-        jetpackHandling();
-        MovementControl();
+        
+        DiverJump();
+        JetpackUse();
         BubbleHandling();
     }
 
-    void OnCollisionStay2D(Collision2D colision)
+    void OnCollisionStay2D(Collision2D collision)
     {
 
-        if (colision.gameObject.tag == "seadevil")
+        if (collision.gameObject.CompareTag("seadevil"))
         {
-            transform.parent = colision.transform;
-            isGrounded = true;
+            transform.parent = collision.transform;
+            IsGrounded = true;
         }
 
-        if (colision.gameObject.tag == "spikes")
+        if (collision.gameObject.CompareTag("spikes"))
         {
             OxygenCounter.Instance.Damage = true;
+            IsGrounded = true;
         }
     }
 
@@ -104,7 +109,7 @@ public class Diver : MonoBehaviour
     void OnCollisionExit2D(Collision2D other)
     {
         transform.parent = null;
-        isGrounded = false;
+        IsGrounded = false;
     }
 
     void BubbleHandling()
@@ -115,86 +120,98 @@ public class Diver : MonoBehaviour
         else
             _bubles.SetActive(false);
 
-        if (verticalMove == 1 && horizontalMove == 0)
+        if (VerticalMove == 1 && HorizontalMove == 0)
         {
             _bubles.transform.eulerAngles = new Vector3(0, 0, 180);
         }
-        else if (horizontalMove == 1)
+        else if (HorizontalMove == 1)
         {
             _bubles.transform.eulerAngles = new Vector3(0, 0, 165);
             _bubles.transform.localPosition = new Vector3(-0.3f, -0.3f, 0);
         }
-        else if (horizontalMove == -1)
+        else if (HorizontalMove == -1)
         {
             _bubles.transform.eulerAngles = new Vector3(0, 0, 195);
             _bubles.transform.localPosition = new Vector3(0.3f, -0.3f, 0);
         }
     }
 
-
-    void MovementControl()
+    async Task DiverJump()
     {
-        float UpForceMode;
-        float RightForceMode;
-
-        if (_jetpackUse)
+        if (IsGrounded)
         {
-            UpForceMode = BustedUpForce;
-            RightForceMode = BustedRightForce;
+            _jumping = false;
+            UpDoublePress = false;
         }
-        else
+           
+        if (VerticalMove > 0 && !_jumping )
         {
-            UpForceMode = UpForce;
-            RightForceMode = RightForce;
-        }
-        if (verticalMove > 0)
-        {
-            UpForceReduction();
-            if (player.transform.position.y < 10)
-                player.AddForce(Vector2.up * UpForceMode * verticalMove, ForceMode2D.Force);
-
-
-        }
-        else
-        {
-            if(UpForce < 150)
-            StartCoroutine(UpForceReset());
-        }
+            Jump();
+            while (!_endOfAnimation)
+            {
+                Console.WriteLine("Excel is busy");
+                await Task.Delay(25);
+            }
+            _player.velocity += new Vector2(0, 5);
+                Debug.Log("jump!" + _player.velocity );
             
-
-        if (verticalPos == 0 && isGrounded == true)
-        {
-            player.AddForce(Vector2.right * Movespeed * horizontalMove, ForceMode2D.Force);
+            _jumping = true;
+            _endOfAnimation = false;
         }
-        else
-        {
-            player.AddForce(Vector2.right * RightForceMode * horizontalMove, ForceMode2D.Force);
-            // _jetpackUse = true;
+        
 
-        }
+        DiverHorizontalMove();
 
-        if (isGrounded || (verticalPos < 0 && horizontalMove == 0))
-        {
-            _jetpackUse = false;
-        }
-
-        player.velocity = movement;
     }
 
-    void GroundCheck()
+    private void DiverHorizontalMove()
+    {
+        if (HorizontalMove > 0 && _player.velocity.x <5)
+        {
+            _player.AddForce(Vector2.right * Movespeed * HorizontalMove, ForceMode2D.Force);
+        }
+        else if (HorizontalMove < 0 &&  _player.velocity.x >-5)
+        {
+            _player.AddForce(Vector2.right * Movespeed * HorizontalMove, ForceMode2D.Force);
+        }
+        else
+        {
+            if(_player.velocity.x !=0 && VerticalMove == 0 )
+                _player.velocity -= new Vector2(_player.velocity.x *0.1f, 0);
+            else if(_player.velocity.x !=0 && VerticalMove != 0 )
+                _player.velocity -= new Vector2(_player.velocity.x *0.05f, 0);
+        }
+    }
+
+    private void JetpackUse()
+    {
+        if (UpDoublePress  && !_jetpackUse && VerticalPos>0)
+        {
+            Debug.Log("jump!AA" );
+            _player.velocity += new Vector2(0, 8);
+            _jetpackUse = true;
+        }
+
+        if (!(VerticalPos < 0)) return;
+        UpDoublePress = false;
+        _jetpackUse = false;
+    }
+    
+    private void GroundCheck()
     {
  
 
         
-        if (Physics2D.Raycast(new Vector2(_boxCollider.bounds.min.x-0.3f, _boxCollider.bounds.min.y), Vector2.down, 0.2f, platformLayerMask) || Physics2D.Raycast(new Vector2(_boxCollider.bounds.max.x+0.3f, _boxCollider.bounds.min.y), Vector2.down,  0.2f, platformLayerMask))
-            isGrounded = true;
+        if (Physics2D.Raycast(new Vector2(_boxCollider.bounds.min.x-0.3f, _boxCollider.bounds.min.y), Vector2.down, 0.2f, platformLayerMask) || 
+            Physics2D.Raycast(new Vector2(_boxCollider.bounds.max.x+0.3f, _boxCollider.bounds.min.y), Vector2.down,  0.2f, platformLayerMask))
+            IsGrounded = true;
         else
-            isGrounded = false;
+            IsGrounded = false;
 
-        bigHight = Physics2D.Raycast(_boxCollider.bounds.center, Vector2.down,  2f, platformLayerMask);
+        BigHight = Physics2D.Raycast(_boxCollider.bounds.center, Vector2.down,  2f, platformLayerMask);
     }
 
-    void BubleSound()
+    private void BubleSound()
     {
         if (_jetpackUse)
             bubleSound.Play();
@@ -202,84 +219,9 @@ public class Diver : MonoBehaviour
             bubleSound.Stop();
     }
 
-    void jetpackHandling() {
-        if (!_jetpackCooldownState)
-        {
-            if (_jetpackUse == false)
-            {
-                if ((Input.GetKey("space") && isUpPressed) || (Input.GetKey("space") && !isGrounded && horizontalMove != 0))
-                    _jetpackUse = true;
-                
-            }
-            if (!Input.GetKey("space"))
-                _jetpackUse = false;
-        }
-        
-        Debug.Log(JetpackTimer);
-        if (_jetpackUse)
-        {
-            JetpackTimer += Time.deltaTime;
-            Debug.Log("jetpackuse!!!!!!!!!!!!!");
-        }
-
-        if (JetpackTimer >= 0.5f && !_jetpackCooldownState)
-        {
-            _jetpackCooldownState = true;
-            StartCoroutine(JetPackCooldown());
-
-        }
-        
-       // if (_jetpackCooldownState)
-        //    StartCoroutine(JetPackCooldown());
-     //   else if (!_jetpackCooldownState && _jetpackUse)
-       //     StartCoroutine(JetPackUseTime());
-    }
-
-    void UpForceReduction()
+    private void AnimationEnd()
     {
-        if (!isGrounded)
-        {
-            Timer += Time.deltaTime;
-
-            if (Timer >= 0.1f)
-            {
-                Timer = 0f;
-                if (UpForce > 80)
-                    UpForce -= 10;
-            }
-        }
-        
-
-
-
+        _endOfAnimation = true;
     }
-
-    IEnumerator JetPackUseTime()
-    {
-      
-        yield return new WaitForSeconds(1);
-        _jetpackUse = false;
-
-        _jetpackCooldownState = true;
-    }
-
-    IEnumerator JetPackCooldown()
-    {
-        _jetpackUse = false;
-        JetpackTimer = 0f;
-        yield return new WaitForSeconds(3);
-        _jetpackCooldownState = false;
-       
-
-
-    }
-    IEnumerator UpForceReset()
-    {
-        yield return new WaitForSeconds(3);
-        UpForce = 150;
-    }
-
-    
-    
 
 }

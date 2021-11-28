@@ -5,7 +5,8 @@ using UnityEngine;
 public class CameraControler : MonoBehaviour
 {
     GameObject player;
-   
+
+    [SerializeField] private GameManager _gameManager;
 
     [SerializeField]
     float timeOffset;

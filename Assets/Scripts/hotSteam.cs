@@ -88,7 +88,7 @@ public class hotSteam : MonoBehaviour
         if (_detectingBox != null)
         {
 
-            Debug.Log(_detectingBox.name);
+            //Debug.Log(_detectingBox.name);
             if (_detectingBox.name == "diver")
             {
                 _diverDetected = true;
@@ -99,7 +99,7 @@ public class hotSteam : MonoBehaviour
             _diverDetected = false;
         }
 
-        Debug.Log(_diverDetected);
+        //Debug.Log(_diverDetected);
         if (_diverDetected && _steamOn)
         {
             Debug.Log("hittttt");

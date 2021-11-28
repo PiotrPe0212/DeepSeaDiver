@@ -7,7 +7,7 @@ public class seadevilController : MonoBehaviour
 {
    
     private SpriteRenderer _fishRenderer;
-    public  Camera Cam;
+    private  Camera Cam;
     public float _xDistance = 10;
  public float _yDistance = 10;
 
@@ -40,7 +40,7 @@ public float _moveSpeed = 0.5f;
     void Start()
     {
        _fish = GetComponent<Rigidbody2D>();
-       
+       Cam = FindObjectOfType<Camera>();
         _fishRenderer = GetComponent<SpriteRenderer>();
         _initialXPos = _fish.position.x;
        _initialYPos = _fish.position.y;

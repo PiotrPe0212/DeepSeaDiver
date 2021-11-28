@@ -16,20 +16,20 @@ public class keyControl : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        _key.AddForce(Vector2.up * _staticForceValue, ForceMode2D.Force);
-        StartCoroutine(keyFloating());
+      //  _key.AddForce(Vector2.up * _staticForceValue, ForceMode2D.Force);
+      //  StartCoroutine(keyFloating());
     }
     IEnumerator keyFloating()
     {
         yield return new WaitForSeconds(1);
-        if (_staticForceValue == 98.2f)
+        if (_staticForceValue == 1.88f)
         {
-            _staticForceValue = 98;
+            _staticForceValue = 1.71f;
 
         }
-        else if (_staticForceValue == 98)
+        else if (_staticForceValue == 1.71f)
         {
-            _staticForceValue = 98.2f;
+            _staticForceValue = 1.88f;
 
         }
 
@@ -37,7 +37,7 @@ public class keyControl : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D other)
     {
-        Debug.Log("iGetIT!!!1");
+       // Debug.Log("iGetIT!!!1");
         if (other.gameObject.name == "diver")
         {
             Destroy(gameObject);

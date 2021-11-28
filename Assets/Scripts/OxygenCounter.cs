@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,6 +8,7 @@ public class OxygenCounter : MonoBehaviour
     // Start is called before the first frame update
 
     float oxygenTimer;
+    [SerializeField] private GameManager _gameManager;
     public float roundOxygenTimer;
     public float maxOxygenAngle = -110;
     public float minOxygenAngle = 60;
@@ -14,8 +16,6 @@ public class OxygenCounter : MonoBehaviour
     public float _addOxygenValue = 10;
     public GameObject _hitScreen;
     public GameObject clockHandPivot;
-    public GameObject _jetPackUseBulb;
-    public GameObject _jetPackCooldownBulb;
     private float _totalAngle;
     private float _timeToAngleProportion;
     private float _actualAngle;
@@ -38,8 +38,7 @@ public class OxygenCounter : MonoBehaviour
         set
         {
             _hitDamage = value;
-            Debug.Log("HIT");
-
+           
         }
     }
 
@@ -57,10 +56,7 @@ public class OxygenCounter : MonoBehaviour
         }
     }
     float _moreOxygenUse;
-
-
-    [SerializeField]
-
+    
 
  
     void Start()
@@ -78,17 +74,31 @@ public class OxygenCounter : MonoBehaviour
 
     }
 
+    private void Awake()
+    {
+        _gameManager.InitGame += SettingOxygen;
+        _gameManager.LoadLevel += SettingOxygen;
+        _gameManager.ResetLevel += ResetOxygen;
+        _gameManager.EndGame += ResetOxygen;
+        _gameManager.PauseGame += PauseCounter;
+    }
+
+    private void OnDestroy()
+    {
+        _gameManager.InitGame -= SettingOxygen;
+        _gameManager.LoadLevel -= SettingOxygen;
+        _gameManager.ResetLevel -= ResetOxygen;
+        _gameManager.EndGame -= ResetOxygen;
+        _gameManager.PauseGame -= PauseCounter;
+    }
+
     // Update is called once per frame
     void FixedUpdate()
     {
         _startGame = GameObject.Find("GameManager").GetComponent<GameManager>()._startGame;
         _oxygenLevelReset = GameObject.Find("GameManager").GetComponent<GameManager>()._oxygenLevelReset;
         _state = GameObject.Find("GameManager").GetComponent<GameManager>()._state;
-
-
-
-
-        Debug.Log(_jetpackUse);
+        
         if (_state != GameManager.State.PLAY)
         {
             if (_state != GameManager.State.PAUSE)
@@ -99,12 +109,9 @@ public class OxygenCounter : MonoBehaviour
         }
         else
         {
-            if (_hitDamage)
-                StartCoroutine(hitTimer());
-
             if (_jetpackUse)
             {
-                _moreOxygenUse = 10;
+                _moreOxygenUse = 50;
             }
             else
             {
@@ -117,10 +124,11 @@ public class OxygenCounter : MonoBehaviour
                 _actualAngle += _timeToAngleProportion * Time.deltaTime * _moreOxygenUse;
                 if (_hitDamage)
                 {
+                    
                     oxygenTimer -= _damageValue;
                     _actualAngle += _timeToAngleProportion * _damageValue;
                     _hitDamage = false;
-                    Debug.Log(oxygenTimer);
+                    StartCoroutine(hitTimer());
                 }
                 if (_addOxygen)
                 {
@@ -138,8 +146,7 @@ public class OxygenCounter : MonoBehaviour
             }
             GameManager.Instance.OxygenLevel = roundOxygenTimer;
             clockHandPivot.transform.eulerAngles = new Vector3(0, 0, _actualAngle);
-
-            bulbControll();
+            
         }
 
         
@@ -150,20 +157,24 @@ public class OxygenCounter : MonoBehaviour
             _hitScreen.SetActive(false);
         }
 
-        void bulbControll()
-        {
-            if (Diver._jetpackCooldownState)
-                _jetPackCooldownBulb.SetActive(true);
-            else
-                _jetPackCooldownBulb.SetActive(false);
-
-            if (_jetpackUse)
-                _jetPackUseBulb.SetActive(true);
-            else
-                _jetPackUseBulb.SetActive(false);
-        }
+        
       
 
 
+    }
+
+    private void SettingOxygen()
+    {
+            
+    }
+
+    private void PauseCounter()
+    {
+        
+    }
+
+    private void ResetOxygen()
+    {
+        
     }
 }

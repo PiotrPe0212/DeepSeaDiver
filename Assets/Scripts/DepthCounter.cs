@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DepthCounter : MonoBehaviour
 {
-
+    [SerializeField] private GameManager _gameManager;
     private GameObject player;
 
 
@@ -47,6 +47,21 @@ public class DepthCounter : MonoBehaviour
         bulbesReset(_bulbesUnits);
 
     }
+    private void Awake()
+    {
+        _gameManager.InitGame += ResetCounter;
+        _gameManager.ResetLevel += ResetCounter;
+        _gameManager.EndGame += ResetCounter;
+        
+    }
+
+    private void OnDestroy()
+    {
+        _gameManager.InitGame -= ResetCounter;
+        _gameManager.ResetLevel -= ResetCounter;
+        _gameManager.PauseGame -= ResetCounter;
+    }
+    
     void FixedUpdate()
     {
        
@@ -184,8 +199,7 @@ public class DepthCounter : MonoBehaviour
     }
     void bulbesReset(GameObject[] Bulbes)
     {
-        Debug.Log("resety");
-        Debug.Log(Bulbes[1]);
+      
         for (int i = 0; i < Bulbes.Length; i++)
         {
 
@@ -195,6 +209,10 @@ public class DepthCounter : MonoBehaviour
 
     }
 
+    private void ResetCounter()
+    {
+        
+    }
     int stringToDigit(int digitNumberStart, int digitNumberEnd)
     {
         int outNumber;

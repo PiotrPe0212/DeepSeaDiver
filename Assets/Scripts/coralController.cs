@@ -21,6 +21,10 @@ public class coralController : MonoBehaviour
     void FixedUpdate()
     {
         _detectingBox = Physics2D.OverlapBox(_detectVector, _detectScaleVector, 0, _layerToDetect, -1, 3);
+        if (!_detectingBox)
+        {
+            return;
+        }
         if (_detectingBox.name == "diver")
             _diverFromAbove = true;
         else

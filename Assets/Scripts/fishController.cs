@@ -9,11 +9,12 @@ public class fishController : MonoBehaviour
     private Animator _animator;
     private SpriteRenderer _fishRenderer;
     public GameObject fishLight;
-    public Camera Cam;
+    private Camera Cam;
+    public bool smallFisch;
     public float _xDistance = 10;
     public float _yDistance = 10;
-    float _staticForceValue = 98;
-    float _moveForceValue = 3;
+    public float _staticForceValue = 1.71f;
+    public float _moveForceValue = 0;
     float _initialXPos;
     float _actualXPos;
 
@@ -37,9 +38,10 @@ public class fishController : MonoBehaviour
     float _direction;
     private float _horizontalMove;
     private Rigidbody2D _fish;
-    private bool _visibility;
+    public bool _visibility;
     void Start()
     {
+        Cam = FindObjectOfType<Camera>();
         _fish = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
         _fishRenderer = GetComponent<SpriteRenderer>();
@@ -64,16 +66,7 @@ public class fishController : MonoBehaviour
         if (_visibility)
         {
 
-            if (_direction == 1)
-            {
-                _fishRenderer.flipX = true;
-                fishLight.transform.position = transform.position + new Vector3(1.63f, 0.5f, 0);
-            }
-            else if (_direction == 2)
-            {
-                _fishRenderer.flipX = false;
-                fishLight.transform.position = transform.position + new Vector3(-1.63f, 0.5f, 0);
-            }
+           LightPositionController();
 
 
             _fish.AddForce(Vector2.up * _staticForceValue, ForceMode2D.Force);
@@ -104,88 +97,102 @@ public class fishController : MonoBehaviour
                     StartCoroutine(fishWaiting());
                     break;
                 case 1:
-                    //Right
-                    if (_rightCounter == _moveZoneSize)
-                    {
-                        fishDirectionChangeY();
-                    }
-                    else
-                    {
-                        _fish.AddForce(Vector2.right * _moveForceValue, ForceMode2D.Force);
-
-                        if (_actualXDistance >= _xDistance)
-                        {
-                            _rightCounter++;
-                            if (_leftCounter > 0)
-                            { _leftCounter--; }
-                            fishDirectionChangeY();
-
-                        }
-                    }
+                    RightMove();
                     break;
                 case 2:
-                    //Left
-                    if (_leftCounter == _moveZoneSize)
-                    {
-                        fishDirectionChangeY();
-                    }
-                    else
-                    {
-                        _fish.AddForce(Vector2.left * _moveForceValue, ForceMode2D.Force);
-
-
-                        if (_actualXDistance >= _xDistance)
-                        {
-                            _leftCounter++;
-                            if (_rightCounter > 0)
-                            { _rightCounter--; }
-                            fishDirectionChangeY();
-                        }
-                    }
+                    LeftMove();
                     break;
                 case 3:
-                    //Up
-                    if (_upCounter >= _moveZoneSize)
-                    {
-                        fishDirectionChangeX();
-                    }
-                    else
-                    {
-                        _fish.AddForce(Vector2.up * _moveForceValue, ForceMode2D.Force);
-
-                        if (_actualYDistance >= _yDistance)
-                        {
-                            _upCounter++;
-                            if (_downCounter > 0)
-                            { _downCounter--; }
-                            fishDirectionChangeX();
-                        }
-                    }
-                    break;
+                   UpMove();
+                   break;
                 case 4:
-                    //Down
-                    if (_downCounter == _moveZoneSize)
-                    {
-                        fishDirectionChangeX();
-                    }
-                    else
-                    {
-                        _fish.AddForce(Vector2.down * _moveForceValue, ForceMode2D.Force);
-
-                        if (_actualYDistance >= _yDistance)
-                        {
-                            _downCounter++;
-                            if (_upCounter > 0)
-                            { _upCounter--; }
-                            fishDirectionChangeX();
-                        }
-                    }
+                    DownMove();
                     break;
-
             }
         }
     }
 
+    void RightMove()
+    {
+        if (_rightCounter == _moveZoneSize)
+        {
+            fishDirectionChangeY();
+        }
+        else
+        {
+            _fish.AddForce(Vector2.right * _moveForceValue, ForceMode2D.Force);
+
+            if (_actualXDistance >= _xDistance)
+            {
+                _rightCounter++;
+                if (_leftCounter > 0)
+                { _leftCounter--; }
+                fishDirectionChangeY();
+
+            }
+        } 
+    }
+
+    void LeftMove()
+    {
+        if (_leftCounter == _moveZoneSize)
+        {
+            fishDirectionChangeY();
+        }
+        else
+        {
+            _fish.AddForce(Vector2.left * _moveForceValue, ForceMode2D.Force);
+
+
+            if (_actualXDistance >= _xDistance)
+            {
+                _leftCounter++;
+                if (_rightCounter > 0)
+                { _rightCounter--; }
+                fishDirectionChangeY();
+            }
+        } 
+    }
+
+    void UpMove()
+    {
+        if (_upCounter >= _moveZoneSize)
+        {
+            fishDirectionChangeX();
+        }
+        else
+        {
+            _fish.AddForce(Vector2.up * _moveForceValue, ForceMode2D.Force);
+
+            if (_actualYDistance >= _yDistance)
+            {
+                _upCounter++;
+                if (_downCounter > 0)
+                { _downCounter--; }
+                fishDirectionChangeX();
+            }
+        } 
+    }
+
+    void DownMove()
+    {
+        if (_downCounter == _moveZoneSize)
+        {
+            fishDirectionChangeX();
+        }
+        else
+        {
+            _fish.AddForce(Vector2.down * _moveForceValue, ForceMode2D.Force);
+
+            if (_actualYDistance >= _yDistance)
+            {
+                _downCounter++;
+                if (_upCounter > 0)
+                { _upCounter--; }
+                fishDirectionChangeX();
+            }
+        }
+    }
     void OnCollisionEnter2D(Collision2D collision)
     {
         //_upCounter = 0;
@@ -223,14 +230,14 @@ public class fishController : MonoBehaviour
     IEnumerator fishFloating()
     {
         yield return new WaitForSeconds(1);
-        if (_staticForceValue == 98.2f)
+        if (_staticForceValue == 1.881f)
         {
-            _staticForceValue = 98;
+            _staticForceValue = 1.71f;
 
         }
-        else if (_staticForceValue == 98)
+        else if (_staticForceValue == 1.71)
         {
-            _staticForceValue = 98.2f;
+            _staticForceValue = 1.881f;
 
         }
 
@@ -305,4 +312,24 @@ public class fishController : MonoBehaviour
             fishSound.pitch = 0.8f;
     }
 
+    void LightPositionController()
+    {
+        float lightPosX = 1.63f;
+        float lightPosY = 0.5f;
+        if (smallFisch)
+        {
+            lightPosX = 0.576f;
+            lightPosY = 0;
+        }
+        if (_direction == 1)
+        {
+            _fishRenderer.flipX = true;
+            fishLight.transform.position = transform.position + new Vector3(lightPosX, lightPosY, 0);
+        }
+        else if (_direction == 2)
+        {
+            _fishRenderer.flipX = false;
+            fishLight.transform.position = transform.position + new Vector3(-lightPosX, lightPosY, 0);
+        }
+    }
 }
