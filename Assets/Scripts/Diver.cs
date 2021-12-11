@@ -31,7 +31,9 @@ public class Diver : MonoBehaviour
     public static float VerticalPos;
     public static bool _jetpackUse;
     public static bool WillGroundHitAnim;
-    private bool _endOfAnimation =false;
+    private bool _jumpStart;
+    private bool  _waitingForAnim;
+    private bool _jumpReset;
 
 
     public event Action JetPack;
@@ -48,22 +50,17 @@ public class Diver : MonoBehaviour
         _bubles = GameObject.Find("diver/bubles");
         _prevVerticvalPos = _player.position.y;
         _bubles.SetActive(false);
+        ResetAfterJump();
     }
 
-    private void Awake()
-    {
-        _diverAnimationController.AnimationEnded += AnimationEnd;
-    }
-    private void OnDestroy()
-    {
-        _diverAnimationController.AnimationEnded -= AnimationEnd;
-    }
 
     void Update()
     {
         
         HorizontalMove = Input.GetAxisRaw("Horizontal");
         VerticalMove = Input.GetAxisRaw("Vertical");
+        if (Input.GetButtonUp("Jump") && !_jumpStart)
+            _jumpStart = true;
         if (_jumping && !UpDoublePress && Input.GetButtonDown("Jump"))
         {
             UpDoublePress = true;
@@ -71,20 +68,22 @@ public class Diver : MonoBehaviour
     }
     void FixedUpdate()
     {
+
         VerticalPos = _player.position.y - _prevVerticvalPos;
         _prevVerticvalPos = _player.position.y;
-
+        
         GroundCheck();
-       
+
         if (!BigHight && !WillGroundHitAnim)
-            WillGroundHitAnim = true;
+        { WillGroundHitAnim = true;
+        }
         else if (WillGroundHitAnim && diverAnimationController._endOfHitGroundAnim)
             WillGroundHitAnim = false;
 
         if (OxygenCounter.Instance)
             OxygenCounter.Instance.Jetpack = _jetpackUse;
         
-        DiverJump();
+        DiverMove();
         JetpackUse();
         BubbleHandling();
     }
@@ -136,32 +135,24 @@ public class Diver : MonoBehaviour
         }
     }
 
-    async Task DiverJump()
+ private void DiverMove()
     {
-        if (IsGrounded)
+       
+        if (_jumpStart && !_jumping)
         {
-            _jumping = false;
-            UpDoublePress = false;
-        }
-           
-        if (VerticalMove > 0 && !_jumping )
-        {
-            Jump();
-            while (!_endOfAnimation)
-            {
-                Console.WriteLine("Excel is busy");
-                await Task.Delay(25);
-            }
-            _player.velocity += new Vector2(0, 5);
-                Debug.Log("jump!" + _player.velocity );
-            
+                Jump();
             _jumping = true;
-            _endOfAnimation = false;
-        }
-        
+             
+            }
+       
 
         DiverHorizontalMove();
 
+    }
+
+    public void JumpFunction()
+    {
+        _player.velocity += new Vector2(0, 6);
     }
 
     private void DiverHorizontalMove()
@@ -204,11 +195,12 @@ public class Diver : MonoBehaviour
         
         if (Physics2D.Raycast(new Vector2(_boxCollider.bounds.min.x-0.3f, _boxCollider.bounds.min.y), Vector2.down, 0.2f, platformLayerMask) || 
             Physics2D.Raycast(new Vector2(_boxCollider.bounds.max.x+0.3f, _boxCollider.bounds.min.y), Vector2.down,  0.2f, platformLayerMask))
-            IsGrounded = true;
+         IsGrounded = true;
         else
             IsGrounded = false;
 
-        BigHight = Physics2D.Raycast(_boxCollider.bounds.center, Vector2.down,  2f, platformLayerMask);
+        
+            BigHight = Physics2D.Raycast(_boxCollider.bounds.center, Vector2.down, 2f, platformLayerMask);
     }
 
     private void BubleSound()
@@ -219,9 +211,12 @@ public class Diver : MonoBehaviour
             bubleSound.Stop();
     }
 
-    private void AnimationEnd()
-    {
-        _endOfAnimation = true;
-    }
 
+
+    public void ResetAfterJump()
+    {
+        _jumpStart = false;
+        _jumping = false;
+        UpDoublePress = false;
+    }
 }

@@ -9,14 +9,13 @@ public class diverAnimationController : MonoBehaviour
     private Animator _animator;
     private SpriteRenderer diverRenderer;
 
-    private bool _isGrounded;
+    public bool _isGrounded;
     private bool _isUpPressed;
     private float _horizontalMove;
-    private float _isVerticalMove;
+    public float _isVerticalMove;
     private bool _jetpackUse;
     private bool _endOfAnimation = false;
-    private bool _bigHight;
-    public static bool _startUp;
+    public bool _bigHight;
     public static bool _endOfHitGroundAnim;
     public static bool _endOfDeathAnim = false;
     private bool _deathSet;
@@ -27,7 +26,8 @@ public class diverAnimationController : MonoBehaviour
     AnimationState _state;
     private bool isSwitching;
     private bool _startJumpAnimation = false;
-    public event Action AnimationEnded;
+    private bool _endOfJumpAnimation = false;
+    private bool _endOfFallinitAnimation = false;
     void Start()
     {
 
@@ -69,6 +69,7 @@ public class diverAnimationController : MonoBehaviour
         {
             case AnimationState.WAITING:
                 _animator.Play("wait");
+                _diver.ResetAfterJump();
                 break;
 
             case AnimationState.WALKING:
@@ -77,6 +78,7 @@ public class diverAnimationController : MonoBehaviour
                 break;
 
             case AnimationState.FALLINIT:
+                _endOfFallinitAnimation= false;
                 _animator.Play("downInit");
                 break;
 
@@ -85,13 +87,13 @@ public class diverAnimationController : MonoBehaviour
                 break;
 
             case AnimationState.GROUNDHIT:
-                
+                _endOfHitGroundAnim = false;
                     _animator.Play("afterFall");
                 _fallHitAudio.PlayOneShot(_fallHitAudio.clip, 1);
                 break;
 
             case AnimationState.JUMP:
-                _endOfHitGroundAnim = false;
+                _endOfJumpAnimation = false;
                 _animator.Play("Jump");
                 break;
 
@@ -104,6 +106,7 @@ public class diverAnimationController : MonoBehaviour
                 break;
 
             case AnimationState.DEATH:
+                _endOfDeathAnim = false;
                 if(_deathSet)
                 _animator.Play("death");
                 else
@@ -116,10 +119,11 @@ public class diverAnimationController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        Debug.Log(_state);
         _isUpPressed = Diver._jumping;
         _isGrounded = Diver.IsGrounded;
         _horizontalMove = Diver.HorizontalMove;
-        _isVerticalMove = Diver.VerticalMove;
+        _isVerticalMove = Diver.VerticalPos;
         _jetpackUse = Diver._jetpackUse;
         _bigHight = Diver.WillGroundHitAnim;
         _deathSet = GameObject.Find("GameManager").GetComponent<GameManager>()._death;
@@ -139,106 +143,40 @@ public class diverAnimationController : MonoBehaviour
             switch (_state)
             {
                 case AnimationState.WAITING:
-                    if (_isGrounded && _horizontalMove != 0)
-                    {
-                        SwitchState(AnimationState.WALKING);
-                    }
-
-                    if (_startJumpAnimation)
-                    {
-                        SwitchState(AnimationState.JUMP);
-                    }
-
-                    if (_deathSet)
-                        SwitchState(AnimationState.DEATH);
+                    UpdateWait();
 
                     break;
 
                 case AnimationState.WALKING:
-
-
-                    if (_horizontalMove == 0)
-                    {
-                        SwitchState(AnimationState.WAITING);
-                    }
-
-                    if (!_isGrounded  && _isVerticalMove <= 0 && _bigHight)
-                    {
-                        SwitchState(AnimationState.FALLINIT);
-                    }
-
-                    if (_startJumpAnimation)
-                    {
-                        SwitchState(AnimationState.JUMP);
-                    }
-
-                    if (_deathSet)
-                        SwitchState(AnimationState.DEATH);
-
+                    UpdateWalk();
                     break;
 
                 case AnimationState.FALLINIT:
-                    if (_endOfAnimation)
+                    if (_endOfFallinitAnimation)
                     {
                         SwitchState(AnimationState.FALLING);
                     }
                     break;
 
                 case AnimationState.FALLING:
-                    if (_isGrounded && _bigHight)
-                    {
-                        SwitchState(AnimationState.GROUNDHIT);
-                    }
-                    else if(_isGrounded &&  !_bigHight)
-                        SwitchState(AnimationState.WAITING);
-
-                    if (_startJumpAnimation)
-                    {
-                        SwitchState(AnimationState.JUMP);
-                    }
-
-                    if (_deathSet)
-                        SwitchState(AnimationState.DEATH);
+                   UpdateFall();
 
                     break;
 
                 case AnimationState.GROUNDHIT:
-                    if (_endOfAnimation && _horizontalMove == 0)
-                    {
-                        SwitchState(AnimationState.WAITING);
-                    }
-                    else if (_endOfAnimation && _horizontalMove != 0)
-                    {
-                        SwitchState(AnimationState.WALKING);
-                    }
-
-                    if (_deathSet)
-                        SwitchState(AnimationState.DEATH);
-
+                   UpdateGroudHit();
                     break;
 
 
                 case AnimationState.JUMP:
-                    if (_endOfAnimation)
+                    if (_endOfJumpAnimation)
                     {
                         SwitchState(AnimationState.UP);
                     }
                     break;
 
                 case AnimationState.UP:
-                    if (!_isGrounded  && !_isUpPressed )
-                    {
-                        SwitchState(AnimationState.FALLINIT);
-                    }
-                    if (_jetpackUse)
-                        SwitchState(AnimationState.JETPACK);
-                    if (_isGrounded && _horizontalMove == 0)
-                        SwitchState(AnimationState.WAITING);
-                    else if (_isGrounded && _horizontalMove != 0)
-                        SwitchState(AnimationState.WALKING);
-
-                    if (_deathSet)
-                        SwitchState(AnimationState.DEATH);
+                   UpdateUp();
 
                     break;
 
@@ -253,15 +191,101 @@ public class diverAnimationController : MonoBehaviour
 
                 case AnimationState.DEATH:
 
-                    if (_endOfAnimation)
-                        _endOfDeathAnim = true;
-                    
                     if(!_deathSet)
                         SwitchState(AnimationState.WAITING);
                     break;
             }
         }
     }
+
+   private void UpdateWait()
+    {
+        if (_isGrounded && _horizontalMove != 0)
+        {
+            SwitchState(AnimationState.WALKING);
+        }
+
+        if (_startJumpAnimation)
+        {
+            SwitchState(AnimationState.JUMP);
+        }
+
+        if (_deathSet)
+            SwitchState(AnimationState.DEATH);
+    }
+
+   private void UpdateWalk()
+   {
+       
+       if (_horizontalMove == 0)
+       {
+           SwitchState(AnimationState.WAITING);
+       }
+
+       if (!_isGrounded  && _isVerticalMove <= 0 && _bigHight)
+       {
+           SwitchState(AnimationState.FALLINIT);
+       }
+
+       if (_startJumpAnimation)
+       {
+           SwitchState(AnimationState.JUMP);
+       }
+
+       if (_deathSet)
+           SwitchState(AnimationState.DEATH);
+
+   }
+   
+
+   private void UpdateFall()
+   {
+       if (_isGrounded && _bigHight)
+       {
+           SwitchState(AnimationState.GROUNDHIT);
+       }
+       else if(_isGrounded &&  !_bigHight)
+           SwitchState(AnimationState.WAITING);
+       
+
+       if (_deathSet)
+           SwitchState(AnimationState.DEATH);
+   }
+
+   private void UpdateGroudHit()
+   {
+       
+       if (_endOfHitGroundAnim && _horizontalMove == 0)
+       {
+           SwitchState(AnimationState.WAITING);
+       }
+       else if (_endOfHitGroundAnim && _horizontalMove != 0)
+       {
+           SwitchState(AnimationState.WALKING);
+       }
+
+       if (_deathSet)
+           SwitchState(AnimationState.DEATH);
+ 
+   }
+
+  
+
+   private void UpdateUp()
+   {
+       if (!_isGrounded  && _isVerticalMove < 0)
+       {
+           SwitchState(AnimationState.FALLINIT);
+       }
+       if (_jetpackUse)
+           SwitchState(AnimationState.JETPACK);
+      if (_isGrounded && _isVerticalMove < 0)
+          SwitchState(AnimationState.WAITING);
+
+       if (_deathSet)
+           SwitchState(AnimationState.DEATH);
+   }
+
 
     void EndState()
     {
@@ -277,8 +301,6 @@ public class diverAnimationController : MonoBehaviour
                 break;
 
             case AnimationState.FALLINIT:
-                _endOfAnimation = false;
-                _startUp = false;
                 break;
 
             case AnimationState.FALLING:
@@ -286,15 +308,13 @@ public class diverAnimationController : MonoBehaviour
                 break;
 
             case AnimationState.GROUNDHIT:
-                _endOfAnimation = false;
-                _endOfHitGroundAnim = true;
+                
                 break;
 
 
             case AnimationState.JUMP:
                 _startJumpAnimation = false;
-                _endOfAnimation = false;
-                _startUp = false;
+            _diver.JumpFunction();
                 break;
 
             case AnimationState.UP:
@@ -306,19 +326,31 @@ public class diverAnimationController : MonoBehaviour
 
             case AnimationState.DEATH:
                 _endOfDeathAnim = false;
-                _endOfAnimation = false;
                 break;
         }
 
     }
 
-    void EndOfAnimation()
+    void EndOfJumpAnimation()
     {
-        _endOfAnimation = true;
-        AnimationEnded();
-
+        _endOfJumpAnimation = true;
+     
     }
 
+    void EndOfFallInitAnim()
+    {
+        _endOfFallinitAnimation= true;
+    }
+
+    void EndOfGroudHitAnim()
+    {
+        _endOfHitGroundAnim = true;
+    }
+
+    void EndOfDeathAnim()
+    {
+        _endOfDeathAnim = true;
+    }
     private void JumpAnimation()
     {
         _startJumpAnimation = true;
