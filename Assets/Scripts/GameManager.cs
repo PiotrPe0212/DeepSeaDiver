@@ -32,7 +32,7 @@ public class GameManager : MonoBehaviour
     public  bool _resetLevel;
     bool _pause;
     public  bool _death = false;
-    
+    private bool _gameInfoShowed = false;
 
     int _currentLevel;
     float _currentWinCondition;
@@ -77,8 +77,8 @@ public class GameManager : MonoBehaviour
 
     public GameManager()
     {
-        _levels = new string[] { "Level11","Level22","Level33","Level44" };
-        _winConditions = new float[] { 1, 1, 2, 3 };
+        _levels = new string[] { "Level22","Level33","Level44" };
+        _winConditions = new float[] { 1, 2, 3 };
     }
 
     public bool NearChest
@@ -106,6 +106,7 @@ public class GameManager : MonoBehaviour
     {
         ClickSound.Play();
         _resetLevel = true;
+        ResetAfterDeath();
     }
     public void MainMenuClicked()
     {
@@ -116,7 +117,7 @@ public class GameManager : MonoBehaviour
     public void ReturnClicked()
     {
         ClickSound.Play();
-        SwitchState(State.PLAY, 0.5f);
+        SwitchState(State.PLAY, 0.2f);
     }
     public void ExitClicked()
     {
@@ -125,13 +126,32 @@ public class GameManager : MonoBehaviour
         Application.Quit();
     }
 
-    void parametersReset()
+
+
+    void ResetAfterLvlComp()
     {
+        ResetLevel();
+        _oxygenLevelReset = true;
         _oxygenLevel = 1000;
+        _highestDepth = 0;
+        _timer = false;
+        _keysNumber = 0;
+        _chest = false;
+    }
+
+    void ResetAfterDeath()
+    {
+        ResetAfterLvlComp();
+        _death = false;
+        
+    }
+
+    void ResetAll()
+    {
+        ResetAfterDeath();
         _currentLevel = 1;
         _currentWinCondition = _winConditions[_currentLevel - 1];
         _startGame = false;
-        _death = false;
         LoadPanel.SetActive(false);
         GameOverPanel.SetActive(false);
         LevelCompPanel.SetActive(false);
@@ -140,17 +160,16 @@ public class GameManager : MonoBehaviour
         GamePanel.SetActive(false);
         ChestInfo.SetActive(false);
         GameInfo.SetActive(false);
-        _timer = false;
         _resetLevel = false;
         _pause = false;
-        _keysNumber = 0;
-        _chest = false; 
+        _highestDepth = 0;
+        _gameInfoShowed = false;
     }
 
     void Start()
     {
         Instance = this;
-        parametersReset();
+        ResetAll();
         SwitchState(State.MENU, 0.5f);
     }
 
@@ -182,10 +201,11 @@ public class GameManager : MonoBehaviour
             case State.MENU:
                 MenuPanel.SetActive(true);
                 MenuMusic.Play();
+                InitGame();
                 if(SceneManager.sceneCount > 1)
                 SceneManager.UnloadSceneAsync(_levels[_currentLevel - 1]);
-                parametersReset();
-                _oxygenLevelReset = true;
+                ResetAll();
+               
                 break;
             case State.INIT:
                 _startGame = true;
@@ -193,26 +213,25 @@ public class GameManager : MonoBehaviour
                 break;
             case State.PLAY:
                 GameMusic.Play();
+                if(!_gameInfoShowed)
                 GameInfo.SetActive(true);
                 _timer = false;
                 break;
             case State.LEVELCOMP:
                 _timer = false;
-                _oxygenLevelReset = true;
                 if (_currentLevel == _levels.Length)
                     EndGamePanel.SetActive(true);
                 else
                     LevelCompPanel.SetActive(true);
-                Debug.Log(SceneManager.GetActiveScene().buildIndex);
                 SceneManager.UnloadSceneAsync(_levels[_currentLevel - 1]);
                 _currentLevel++;
                 _currentWinCondition = _winConditions[_currentLevel - 1];
-                _highestDepth = 0;
                 break;
             case State.LOADLEVEL:
+                ResetAfterLvlComp();
                 _timer = false;
                 LoadPanel.SetActive(true);
-               
+                LoadLevel();
                 if (_resetLevel)
                 {
                     
@@ -220,16 +239,19 @@ public class GameManager : MonoBehaviour
                 }
                 SceneManager.LoadScene(_levels[_currentLevel - 1], LoadSceneMode.Additive);
                 GamePanel.SetActive(true);
-                parametersReset();
+                
                 break;
             case State.PAUSE:
                 Time.timeScale = 0;
                 PauseGamePanel.SetActive(true);
                 _pause = true;
+           
                 break;
             case State.GAMEOVER:
+                ResetAfterDeath();
                 GameOverPanel.SetActive(true);
                 GamePanel.SetActive(false);
+                EndGame();
                 break;
         }
 
@@ -237,11 +259,8 @@ public class GameManager : MonoBehaviour
     void Update()
     {
 
-      
-        //Debug.Log(_death);
         if (!isSwitching)
         {
-            //Debug.Log(_state);
             switch (_state)
             {
                 case State.MENU:
@@ -253,13 +272,13 @@ public class GameManager : MonoBehaviour
                 case State.PLAY:
                     PlayStateCode();
                    
-
                     break;
                 case State.LEVELCOMP:
                     if (!_timer)
                         StartCoroutine(timeForLvlComp());
                     break;
                 case State.LOADLEVEL:
+                    Debug.Log("Load");
                     if (!_timer)
                         StartCoroutine(timeForLoad());
                     break;
@@ -365,8 +384,8 @@ public class GameManager : MonoBehaviour
     IEnumerator timeForLvlComp()
     {
         _timer = true;
-        yield return new WaitForSecondsRealtime(1);
-        SwitchState(State.LOADLEVEL, 0);
+        yield return new WaitForSecondsRealtime(2);
+        SwitchState(State.LOADLEVEL, 0.5f);
 
     }
 
@@ -375,6 +394,7 @@ public class GameManager : MonoBehaviour
         _timer = true;
         yield return new WaitForSecondsRealtime(5);
         GameInfo.SetActive(false);
+        _gameInfoShowed = true;
     }
 
 }

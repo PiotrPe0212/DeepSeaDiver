@@ -425,7 +425,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0.5
   m_AngularDrag: 0.05
-  m_GravityScale: 10
+  m_GravityScale: 12.5
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
@@ -445,10 +445,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fishSound: {fileID: 1599850194349398872}
   fishLight: {fileID: 5958738250561790769}
-  Cam: {fileID: 8482386971286481527, guid: 115aee58bdd8f0f4ea7322d055446be5, type: 3}
-  _xDistance: 2
+  smallFisch: 0
+  _xDistance: 1
   _yDistance: 0.5
+  _staticForceValue: 50
+  _moveForceValue: 3
   _moveZoneSize: 1
+  _visibility: 0
 --- !u!95 &77367818
 Animator:
   serializedVersion: 3

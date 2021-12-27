@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class keyHook : MonoBehaviour
 {
+    [SerializeField] private GameManager _gameManager;
     public static keyHook Instance { get; private set; }
     public Sprite[] spriteArray;
     SpriteRenderer spriteRenderer;
@@ -17,6 +18,22 @@ public class keyHook : MonoBehaviour
             _keysNumber += value;
         }
     }
+
+    private void Awake()
+    {
+        _gameManager.LoadLevel += ResetKeys;
+        _gameManager.ResetLevel += ResetKeys;
+        _gameManager.EndGame += ResetKeys;
+
+    }
+
+    private void OnDestroy()
+    {
+        _gameManager.LoadLevel -= ResetKeys;
+        _gameManager.ResetLevel -= ResetKeys;
+        _gameManager.EndGame -= ResetKeys;
+
+    }
     void Start()
     {
         Instance = this;
@@ -28,5 +45,10 @@ public class keyHook : MonoBehaviour
     void Update()
     {
         spriteRenderer.sprite = spriteArray[_keysNumber];
+    }
+
+    private void ResetKeys()
+    {
+        _keysNumber = 0;
     }
 }

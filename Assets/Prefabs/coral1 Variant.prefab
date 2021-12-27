@@ -1,5 +1,31 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!61 &3772908941634107306
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8315085701190483706}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.012754679, y: 1.0267458}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 3.125, y: 3.75}
+    newSize: {x: 3.125, y: 3.75}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 2.2321773, y: 1.0587792}
+  m_EdgeRadius: 0
 --- !u!1001 &3547075000786405196
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -181,7 +207,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4781876710447102390, guid: a0c587e08f8f709409958e2f1854929a, type: 3}
       propertyPath: m_Name
-      value: coral1
+      value: coral1 Variant
       objectReference: {fileID: 0}
     - target: {fileID: 4781876710447102391, guid: a0c587e08f8f709409958e2f1854929a, type: 3}
       propertyPath: m_Size.x
@@ -203,5 +229,11 @@ PrefabInstance:
       propertyPath: m_SortingLayerID
       value: 874135315
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 609977110905755695, guid: a0c587e08f8f709409958e2f1854929a, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: a0c587e08f8f709409958e2f1854929a, type: 3}
+--- !u!1 &8315085701190483706 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4781876710447102390, guid: a0c587e08f8f709409958e2f1854929a, type: 3}
+  m_PrefabInstance: {fileID: 3547075000786405196}
+  m_PrefabAsset: {fileID: 0}

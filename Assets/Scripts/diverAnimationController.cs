@@ -43,7 +43,7 @@ public class diverAnimationController : MonoBehaviour
 
     private void OnDestroy()
     {
-        _diver.Jump += JumpAnimation;
+        _diver.Jump -= JumpAnimation;
     }
 
     public void SwitchState(AnimationState newState, float delay = 0)

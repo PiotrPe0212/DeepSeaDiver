@@ -9,6 +9,7 @@ public class OxygenCounter : MonoBehaviour
 
     float oxygenTimer;
     [SerializeField] private GameManager _gameManager;
+    [SerializeField] private float oxygenMaxValue;
     public float roundOxygenTimer;
     public float maxOxygenAngle = -110;
     public float minOxygenAngle = 60;
@@ -61,16 +62,9 @@ public class OxygenCounter : MonoBehaviour
  
     void Start()
     {
+        ResetOxygen();
         Instance = this;
-        oxygenTimer = 1000;
-        Instance = this;
-        clockHandPivot.transform.eulerAngles = new Vector3(0, 0, maxOxygenAngle);
-        _totalAngle = Mathf.Abs(minOxygenAngle) + Mathf.Abs(maxOxygenAngle);
-        _timeToAngleProportion = _totalAngle / oxygenTimer;
-        _actualAngle = maxOxygenAngle;
-        _oxygenLevelReset = false;
-      
-      _hitScreen.SetActive(false);
+
 
     }
 
@@ -78,18 +72,18 @@ public class OxygenCounter : MonoBehaviour
     {
         _gameManager.InitGame += SettingOxygen;
         _gameManager.LoadLevel += SettingOxygen;
-        _gameManager.ResetLevel += ResetOxygen;
+        _gameManager.ResetLevel += SettingOxygen;
         _gameManager.EndGame += ResetOxygen;
-        _gameManager.PauseGame += PauseCounter;
+       
     }
 
     private void OnDestroy()
     {
         _gameManager.InitGame -= SettingOxygen;
         _gameManager.LoadLevel -= SettingOxygen;
-        _gameManager.ResetLevel -= ResetOxygen;
+        _gameManager.ResetLevel -= SettingOxygen;
         _gameManager.EndGame -= ResetOxygen;
-        _gameManager.PauseGame -= PauseCounter;
+        
     }
 
     // Update is called once per frame
@@ -101,14 +95,9 @@ public class OxygenCounter : MonoBehaviour
         
         if (_state != GameManager.State.PLAY)
         {
-            if (_state != GameManager.State.PAUSE)
-            {
-                oxygenTimer = 1000;
-                _actualAngle = maxOxygenAngle;
-            }
+            return;
         }
-        else
-        {
+      
             if (_jetpackUse)
             {
                 _moreOxygenUse = 50;
@@ -133,7 +122,14 @@ public class OxygenCounter : MonoBehaviour
                 if (_addOxygen)
                 {
                     oxygenTimer += _addOxygenValue;
+                if (oxygenTimer > oxygenMaxValue)
+                {
+                    oxygenTimer = oxygenMaxValue;
+                    _actualAngle = maxOxygenAngle;
+                }
+                else
                     _actualAngle -= _timeToAngleProportion * _addOxygenValue;
+
                     _addOxygen = false;
                 }
 
@@ -147,34 +143,33 @@ public class OxygenCounter : MonoBehaviour
             GameManager.Instance.OxygenLevel = roundOxygenTimer;
             clockHandPivot.transform.eulerAngles = new Vector3(0, 0, _actualAngle);
             
-        }
+       
 
-        
-
-        IEnumerator hitTimer() {
-            _hitScreen.SetActive(true);
-            yield return new WaitForSeconds(0.2f);
-            _hitScreen.SetActive(false);
-        }
-
-        
       
 
-
     }
 
-    private void SettingOxygen()
+    IEnumerator hitTimer()
     {
-            
-    }
-
-    private void PauseCounter()
-    {
-        
+        _hitScreen.SetActive(true);
+        yield return new WaitForSeconds(0.2f);
+        _hitScreen.SetActive(false);
     }
 
     private void ResetOxygen()
     {
-        
+        oxygenTimer = oxygenMaxValue;
+        clockHandPivot.transform.eulerAngles = new Vector3(0, 0, maxOxygenAngle);
+        _totalAngle = Mathf.Abs(minOxygenAngle) + Mathf.Abs(maxOxygenAngle);
+        _timeToAngleProportion = _totalAngle / oxygenTimer;
+        _actualAngle = maxOxygenAngle;
+        _oxygenLevelReset = false;
+        _hitScreen.SetActive(false);
     }
+    private void SettingOxygen()
+    {
+        oxygenTimer = oxygenMaxValue;
+        _actualAngle = maxOxygenAngle;
+    }
+
 }

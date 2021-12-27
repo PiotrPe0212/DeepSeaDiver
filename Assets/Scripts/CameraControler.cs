@@ -18,6 +18,20 @@ public class CameraControler : MonoBehaviour
         
     }
 
+    private void Awake()
+    {
+        _gameManager.InitGame += InitialCamera;
+        _gameManager.LoadLevel += InitialCamera;
+        _gameManager.ResetLevel += InitialCamera;
+    }
+
+    private void Destroy()
+    {
+        _gameManager.InitGame -= InitialCamera;
+        _gameManager.LoadLevel -= InitialCamera;
+        _gameManager.ResetLevel -= InitialCamera;
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -31,5 +45,15 @@ if(player){
 
         transform.position = Vector3.Lerp(startPos, endPos, timeOffset*Time.deltaTime);
     }
+        else
+        {
+            InitialCamera();
+        }
 }
+
+    private void InitialCamera()
+    {
+        Vector3 initialPos =  new Vector3(-8f, 5f, -1f);
+        transform.position = Vector3.Lerp(transform.position, initialPos, timeOffset * Time.deltaTime);
+    }
 }

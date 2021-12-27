@@ -67,6 +67,7 @@ public class hotSteam : MonoBehaviour
             em.rateOverTime = 5f;
             _steamOn = false;
             _coroutineOff = false;
+            _diverDetected = false;
         }
         yield return new WaitForSeconds(_steamOffTime);
         _coroutineOn = true;
@@ -88,21 +89,18 @@ public class hotSteam : MonoBehaviour
         if (_detectingBox != null)
         {
 
-            //Debug.Log(_detectingBox.name);
+
             if (_detectingBox.name == "diver")
             {
                 _diverDetected = true;
             }
+            else
+                _diverDetected = false;
         }
-        else
-        {
-            _diverDetected = false;
-        }
-
-        //Debug.Log(_diverDetected);
+        
         if (_diverDetected && _steamOn)
         {
-            Debug.Log("hittttt");
+            
             if (!_isHited)
             {
                 OxygenCounter.Instance.Damage = true;

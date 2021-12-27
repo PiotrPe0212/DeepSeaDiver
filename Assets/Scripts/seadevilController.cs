@@ -7,7 +7,6 @@ public class seadevilController : MonoBehaviour
 {
    
     private SpriteRenderer _fishRenderer;
-    private  Camera Cam;
     public float _xDistance = 10;
  public float _yDistance = 10;
 
@@ -40,7 +39,6 @@ public float _moveSpeed = 0.5f;
     void Start()
     {
        _fish = GetComponent<Rigidbody2D>();
-       Cam = FindObjectOfType<Camera>();
         _fishRenderer = GetComponent<SpriteRenderer>();
         _initialXPos = _fish.position.x;
        _initialYPos = _fish.position.y;
@@ -51,11 +49,7 @@ public float _moveSpeed = 0.5f;
 
     private void FixedUpdate() {
 
-        if (_fishRenderer.IsVisibleFrom(Cam)) 
-                _visibility = true;
-        else _visibility = false;
-        if (_visibility)
-        {
+     
             _actualXPos = _fish.position.x;
             _actualYPos = _fish.position.y;
             _actualXDistance = Mathf.Abs(_actualXPos - _initialXPos);
@@ -119,7 +113,7 @@ public float _moveSpeed = 0.5f;
                     }
                     break;
             }
-        }
+        
     }
     
 
