@@ -10,19 +10,17 @@ public class diverAnimationController : MonoBehaviour
     private SpriteRenderer diverRenderer;
 
     public bool _isGrounded;
-    private bool _isUpPressed;
     private float _horizontalMove;
     public float _isVerticalMove;
-    private bool _jetpackUse;
-    private bool _endOfAnimation = false;
+   [SerializeField] private bool _jetpackUse;
     public bool _bigHight;
     public static bool _endOfHitGroundAnim;
     public static bool _endOfDeathAnim = false;
     private bool _deathSet;
-    private bool _reset;
+    private bool _edgeCaught;
     public AudioSource _stepAudio;
     public AudioSource _fallHitAudio;
-    public enum AnimationState { WAITING, WALKING, FALLINIT, FALLING, JUMP, UP, GROUNDHIT, JETPACK, DEATH }
+    public enum AnimationState { WAITING, WALKING, FALLINIT, FALLING, JUMP, UP, GROUNDHIT, JETPACK, DEATH, CLIMB }
     AnimationState _state;
     private bool isSwitching;
     private bool _startJumpAnimation = false;
@@ -74,6 +72,7 @@ public class diverAnimationController : MonoBehaviour
 
             case AnimationState.WALKING:
                 _animator.Play("walk");
+                _diver.ResetAfterJump();
                 _stepAudio.Play();
                 break;
 
@@ -86,8 +85,11 @@ public class diverAnimationController : MonoBehaviour
                 _animator.Play("fallingDown");
                 break;
 
+            case AnimationState.CLIMB:
+                _animator.Play("Climb");
+                break;
             case AnimationState.GROUNDHIT:
-                _endOfHitGroundAnim = false;
+                
                     _animator.Play("afterFall");
                 _fallHitAudio.PlayOneShot(_fallHitAudio.clip, 1);
                 break;
@@ -120,14 +122,14 @@ public class diverAnimationController : MonoBehaviour
     private void FixedUpdate()
     {
         Debug.Log(_state);
-        _isUpPressed = Diver._jumping;
         _isGrounded = Diver.IsGrounded;
         _horizontalMove = Diver.HorizontalMove;
         _isVerticalMove = Diver.VerticalPos;
         _jetpackUse = Diver._jetpackUse;
         _bigHight = Diver.WillGroundHitAnim;
+        _edgeCaught = Diver.EdgeCaught;
         _deathSet = GameObject.Find("GameManager").GetComponent<GameManager>()._death;
-        _reset = GameObject.Find("GameManager").GetComponent<GameManager>()._resetLevel;
+       
         if (_horizontalMove == -1)
         {
             diverRenderer.flipX = true;
@@ -158,6 +160,10 @@ public class diverAnimationController : MonoBehaviour
                     }
                     break;
 
+                case AnimationState.CLIMB:
+                    if(!_edgeCaught)
+                        SwitchState(AnimationState.WAITING);
+                    break;
                 case AnimationState.FALLING:
                    UpdateFall();
 
@@ -184,6 +190,9 @@ public class diverAnimationController : MonoBehaviour
                     if (!_jetpackUse)
                         SwitchState(AnimationState.FALLINIT);
 
+                    if (_edgeCaught)
+                        SwitchState(AnimationState.CLIMB);
+                    
                     if (_deathSet)
                         SwitchState(AnimationState.DEATH);
 
@@ -246,9 +255,13 @@ public class diverAnimationController : MonoBehaviour
        }
        else if(_isGrounded &&  !_bigHight)
            SwitchState(AnimationState.WAITING);
-       
 
-       if (_deathSet)
+        if (_jetpackUse)
+            SwitchState(AnimationState.JETPACK);
+        if (_edgeCaught)
+            SwitchState(AnimationState.CLIMB);
+
+        if (_deathSet)
            SwitchState(AnimationState.DEATH);
    }
 
@@ -281,8 +294,10 @@ public class diverAnimationController : MonoBehaviour
            SwitchState(AnimationState.JETPACK);
       if (_isGrounded && _isVerticalMove < 0)
           SwitchState(AnimationState.WAITING);
+        if (_edgeCaught)
+            SwitchState(AnimationState.CLIMB);
 
-       if (_deathSet)
+        if (_deathSet)
            SwitchState(AnimationState.DEATH);
    }
 
@@ -307,8 +322,11 @@ public class diverAnimationController : MonoBehaviour
 
                 break;
 
+            case AnimationState.CLIMB:
+                break;
+
             case AnimationState.GROUNDHIT:
-                
+                _endOfHitGroundAnim = false;
                 break;
 
 

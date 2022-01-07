@@ -100,7 +100,7 @@ public class OxygenCounter : MonoBehaviour
       
             if (_jetpackUse)
             {
-                _moreOxygenUse = 50;
+                _moreOxygenUse = 10;
             }
             else
             {

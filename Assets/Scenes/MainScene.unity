@@ -6850,7 +6850,11 @@ PrefabInstance:
       objectReference: {fileID: 838560627}
     - target: {fileID: 167014892, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: oxygenMaxValue
-      value: 1000
+      value: 1200
+      objectReference: {fileID: 0}
+    - target: {fileID: 167014892, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: _addOxygenValue
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 1043717970, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: m_IsActive
@@ -6875,6 +6879,13 @@ PrefabInstance:
     - target: {fileID: 1204939936, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1945926304, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: m_Text
+      value: "The main purpose is to find a chest with treasure - located in the
+        deepest parts of the sea. Sometimes you will need some key (or keys!) to
+        open the chest. \r\nLook out on your oxygen level - if you use it all, the
+        game is over. \r\nUse WASD to move (double W activate jetpack).\r\nHave fun!"
       objectReference: {fileID: 0}
     - target: {fileID: 522218772790247514, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: VelocityModule.enabled
@@ -7164,10 +7175,26 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8306552955547785851, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: m_Maskable
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8306552955547785851, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8306552955547785852, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: m_Colors.m_FadeDuration
+      value: 0.4
+      objectReference: {fileID: 0}
     - target: {fileID: 8306552955547785852, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 838560627}
+    - target: {fileID: 8306552955547785853, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8306552955563571896, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -7200,6 +7227,14 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 838560627}
+    - target: {fileID: 8306552955932383651, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: m_SortingOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8306552955932383651, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
     - target: {fileID: 8306552955932383653, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: m_Type
       value: 0
@@ -7220,6 +7255,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.2776143
       objectReference: {fileID: 0}
+    - target: {fileID: 8306552955932383653, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
     - target: {fileID: 8306552955932383655, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: m_IsActive
       value: 1

@@ -10,7 +10,7 @@ public class seadevilController : MonoBehaviour
     public float _xDistance = 10;
  public float _yDistance = 10;
 
- public bool _isclockDir = true;
+ private bool _isclockDir = true;
 
  public float _waitTime = 1;
 

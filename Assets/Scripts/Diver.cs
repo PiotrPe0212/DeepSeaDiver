@@ -7,6 +7,7 @@ using UnityEngine;
 public class Diver : MonoBehaviour
 {
     public static Diver Instance { get; private set; }
+    private GameManager GameManager;
     public float Movespeed = 40;
     public float UpForce = 150;
     public float BustedUpForce = 400;
@@ -22,23 +23,33 @@ public class Diver : MonoBehaviour
     private LayerMask platformLayerMask;
 
     [SerializeField] private diverAnimationController _diverAnimationController;
+
     private Vector2 _movement;
     public static bool UpDoublePress = false ;
     public static float HorizontalMove = 0f;
     public static bool IsGrounded;
     public static bool BigHight;
+    public static bool LeftWallDetect;
+    public static bool RightWallDetect;
+    public static bool LeftEdgeDetect;
+    public static bool RightEdgeDetect;
+    public static bool LeftUpperWallDetect;
+    public static bool RightUpperWallDetect;
+    public static bool EdgeCaught;
+    public static bool ClimbingUp;
     public static float VerticalMove;
     public static float VerticalPos;
+    private float RightEdgeMod = 1f;
+    private float LeftEdgeMod= 1f;
+    private float noGroundMod = 1f;
     public static bool _jetpackUse;
+    private static bool _jetpackUsed;
     public static bool WillGroundHitAnim;
-    private bool _jumpStart;
-    private bool  _waitingForAnim;
-    private bool _jumpReset;
+   [SerializeField] private bool _jumpStart;
 
 
     public event Action JetPack;
     public event Action Jump;
-
     public event Action GetDamage;
     
 
@@ -49,22 +60,39 @@ public class Diver : MonoBehaviour
         _boxCollider = GetComponent<BoxCollider2D>();
         _bubles = GameObject.Find("diver/bubles");
         _prevVerticvalPos = _player.position.y;
-        _bubles.SetActive(false);
-        ResetAfterJump();
+        ResetParameters();
     }
 
+    private void Awake()
+    {
+        GameManager = FindObjectOfType<GameManager>();
+        GameManager.InitGame += ResetParameters;
+        GameManager.LoadLevel += ResetParameters;
+        GameManager.ResetLevel += ResetParameters;
+    }
+
+    private void OnDestroy()
+    {
+        GameManager.InitGame -= ResetParameters;
+        GameManager.LoadLevel -= ResetParameters;
+        GameManager.ResetLevel -= ResetParameters;
+    }
 
     void Update()
     {
-        
+
         HorizontalMove = Input.GetAxisRaw("Horizontal");
         VerticalMove = Input.GetAxisRaw("Vertical");
-        if (Input.GetButtonUp("Jump") && !_jumpStart)
+        if (Input.GetButtonUp("Jump") && !_jumpStart && !EdgeCaught)
             _jumpStart = true;
-        if (_jumping && !UpDoublePress && Input.GetButtonDown("Jump"))
+        else if(Input.GetButtonUp("Jump") && EdgeCaught && !ClimbingUp)
+            ClimbingUp = true;
+       else if (Input.GetButtonUp("Jump")&& !IsGrounded && !UpDoublePress)
         {
             UpDoublePress = true;
         }
+
+       
     }
     void FixedUpdate()
     {
@@ -73,20 +101,180 @@ public class Diver : MonoBehaviour
         _prevVerticvalPos = _player.position.y;
         
         GroundCheck();
+        WallDetection();
+        EdgeDetection();
+        WallToClimbDetection();
+
+        
+            if (!RightUpperWallDetect && RightWallDetect)
+            {
+                EdgeCaught = true;
+            }
+            else if (!LeftUpperWallDetect && LeftWallDetect)
+            {
+                EdgeCaught = true;
+            }
+            else
+                EdgeCaught = false;
+       
+        if (EdgeCaught)
+            Climbing();
 
         if (!BigHight && !WillGroundHitAnim)
-        { WillGroundHitAnim = true;
-        }
-        else if (WillGroundHitAnim && diverAnimationController._endOfHitGroundAnim)
+         WillGroundHitAnim = true;
+      
+        if (WillGroundHitAnim && diverAnimationController._endOfHitGroundAnim)
             WillGroundHitAnim = false;
 
         if (OxygenCounter.Instance)
             OxygenCounter.Instance.Jetpack = _jetpackUse;
         
         DiverMove();
+        if(UpDoublePress)
         JetpackUse();
         BubbleHandling();
     }
+
+
+   
+
+ private void DiverMove()
+    {
+       
+        if (_jumpStart && !_jumping)
+        {
+                Jump();
+            _jumping = true;
+             
+            }
+       
+
+        DiverHorizontalMove();
+
+    }
+
+    private void Climbing()
+    {
+        _player.constraints = RigidbodyConstraints2D.FreezePosition;
+        _jumpStart = false;
+        _jumping = false;
+
+        if (ClimbingUp)
+        {
+            if(RightWallDetect)
+            _player.transform.position = _player.transform.position + new Vector3(1f, 1.1f, 0);
+            else if(LeftWallDetect)
+               _player.transform.position = _player.transform.position + new Vector3(-1f, 1.1f, 0);
+            EdgeCaught = false;
+            ClimbingUp = false;
+            _player.constraints = RigidbodyConstraints2D.None;
+            _player.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
+
+        if (VerticalMove < 0)
+        {
+            _player.transform.position = _player.transform.position + new Vector3(0, -0.3f, 0);
+            EdgeCaught = false;
+            ClimbingUp = false;
+            _player.constraints = RigidbodyConstraints2D.None;
+            _player.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
+    }
+   
+
+    private void DiverHorizontalMove()
+    {
+        if (HorizontalMove > 0 && _player.velocity.x <5 && !RightWallDetect )
+        {
+            _player.velocity += new Vector2(Movespeed*0.1f*noGroundMod, 0);
+        }
+        else if (HorizontalMove < 0 &&  _player.velocity.x >-5 && !LeftWallDetect )
+        {
+            _player.velocity -= new Vector2(Movespeed*0.1f*noGroundMod, 0);
+        }
+        else
+        {
+            if(_player.velocity.x !=0 && VerticalMove == 0 )
+                _player.velocity -= new Vector2(_player.velocity.x *0.2f, 0);
+            else if(_player.velocity.x !=0 && VerticalMove != 0 )
+                _player.velocity -= new Vector2(_player.velocity.x *0.1f, 0);
+        }
+
+    }
+    public void JumpFunction()
+    {
+        //activated by diveranimationscript
+        _player.velocity += new Vector2(0, 5);
+    }
+    private void JetpackUse()
+    {
+        if (!_jetpackUsed)
+        {
+            _player.velocity += new Vector2(0, 8);
+            _jetpackUse = true;
+            _jetpackUsed = true;
+        }
+
+        if (_jetpackUsed && VerticalPos < -0.05 || IsGrounded)
+        _jetpackUse = false;
+    }
+    
+    private void GroundCheck()
+    {
+        Vector2 GroundVector = new Vector2(_boxCollider.bounds.center.x, _boxCollider.bounds.center.y);
+         
+        IsGrounded = ReycastFunction(GroundVector, Vector2.down, 0.4f);
+        if (IsGrounded)
+            noGroundMod = 1f;
+        else
+            noGroundMod = 0.5f;
+
+        BigHight = Physics2D.Raycast(_boxCollider.bounds.center, Vector2.down, 4f, platformLayerMask);
+    }
+
+    private void WallDetection()
+    {
+        Vector2 WallVector = new Vector2(_boxCollider.bounds.center.x, _boxCollider.bounds.center.y+0.3f);
+
+        LeftWallDetect = ReycastFunction(WallVector, Vector2.left, 0.25f);
+        RightWallDetect = ReycastFunction(WallVector, Vector2.right, 0.25f);
+
+    }
+
+    private void EdgeDetection()
+    {
+        Vector2 LeftEdgeVector = new Vector2(_boxCollider.bounds.center.x - 0.6f, _boxCollider.bounds.center.y);
+        Vector2 RightEdgeVector = new Vector2(_boxCollider.bounds.center.x + 0.6f, _boxCollider.bounds.center.y);
+
+        LeftEdgeDetect = !ReycastFunction(LeftEdgeVector, Vector2.down, 0.4f);
+        if (LeftEdgeDetect && IsGrounded)
+            LeftEdgeMod = 0.4f;
+        else
+            LeftEdgeMod = 1f;
+
+        RightEdgeDetect = !ReycastFunction(RightEdgeVector, Vector2.down, 0.4f);
+        if (RightEdgeDetect && IsGrounded)
+            RightEdgeMod = 0.4f;
+        else
+            RightEdgeMod = 1f;
+    }
+
+    private void WallToClimbDetection()
+    {
+
+        Vector2 UpperWallVector = new Vector2(_boxCollider.bounds.center.x, _boxCollider.bounds.center.y + 0.5f);
+
+        LeftUpperWallDetect = ReycastFunction(UpperWallVector, Vector2.left, 0.4f);
+        RightUpperWallDetect = ReycastFunction(UpperWallVector, Vector2.right, 0.4f);
+    }
+
+    bool ReycastFunction(Vector2 value, Vector2 direction, float distance)
+    {
+
+        return Physics2D.Raycast(value, direction, distance, platformLayerMask);
+    }
+
+
 
     void OnCollisionStay2D(Collision2D collision)
     {
@@ -109,6 +297,13 @@ public class Diver : MonoBehaviour
     {
         transform.parent = null;
         IsGrounded = false;
+    }
+    private void BubleSound()
+    {
+        if (_jetpackUse)
+            bubleSound.Play();
+        else
+            bubleSound.Stop();
     }
 
     void BubbleHandling()
@@ -135,88 +330,33 @@ public class Diver : MonoBehaviour
         }
     }
 
- private void DiverMove()
-    {
-       
-        if (_jumpStart && !_jumping)
-        {
-                Jump();
-            _jumping = true;
-             
-            }
-       
-
-        DiverHorizontalMove();
-
-    }
-
-    public void JumpFunction()
-    {
-        _player.velocity += new Vector2(0, 6);
-    }
-
-    private void DiverHorizontalMove()
-    {
-        if (HorizontalMove > 0 && _player.velocity.x <5)
-        {
-            _player.AddForce(Vector2.right * Movespeed * HorizontalMove, ForceMode2D.Force);
-        }
-        else if (HorizontalMove < 0 &&  _player.velocity.x >-5)
-        {
-            _player.AddForce(Vector2.right * Movespeed * HorizontalMove, ForceMode2D.Force);
-        }
-        else
-        {
-            if(_player.velocity.x !=0 && VerticalMove == 0 )
-                _player.velocity -= new Vector2(_player.velocity.x *0.1f, 0);
-            else if(_player.velocity.x !=0 && VerticalMove != 0 )
-                _player.velocity -= new Vector2(_player.velocity.x *0.05f, 0);
-        }
-    }
-
-    private void JetpackUse()
-    {
-        if (UpDoublePress  && !_jetpackUse && VerticalPos>0)
-        {
-            Debug.Log("jump!AA" );
-            _player.velocity += new Vector2(0, 8);
-            _jetpackUse = true;
-        }
-
-        if (!(VerticalPos < 0)) return;
-        UpDoublePress = false;
-        _jetpackUse = false;
-    }
-    
-    private void GroundCheck()
-    {
- 
-
-        
-        if (Physics2D.Raycast(new Vector2(_boxCollider.bounds.min.x-0.3f, _boxCollider.bounds.min.y), Vector2.down, 0.2f, platformLayerMask) || 
-            Physics2D.Raycast(new Vector2(_boxCollider.bounds.max.x+0.3f, _boxCollider.bounds.min.y), Vector2.down,  0.2f, platformLayerMask))
-         IsGrounded = true;
-        else
-            IsGrounded = false;
-
-        
-            BigHight = Physics2D.Raycast(_boxCollider.bounds.center, Vector2.down, 2f, platformLayerMask);
-    }
-
-    private void BubleSound()
-    {
-        if (_jetpackUse)
-            bubleSound.Play();
-        else
-            bubleSound.Stop();
-    }
-
-
-
     public void ResetAfterJump()
     {
         _jumpStart = false;
         _jumping = false;
         UpDoublePress = false;
+        _jetpackUse = false;
+        _jetpackUsed = false;
     }
+
+
+
+    private void ResetParameters()
+    {
+        EdgeCaught = false;
+        ClimbingUp = false;
+        IsGrounded = false;
+        BigHight = false;
+        RightWallDetect = false;
+        LeftWallDetect = false;
+        RightEdgeDetect = false;
+        LeftEdgeDetect = false;
+        LeftUpperWallDetect = false;
+        RightUpperWallDetect = false;
+        _bubles.SetActive(false);
+        ResetAfterJump();
+
+    }
+ 
+
 }

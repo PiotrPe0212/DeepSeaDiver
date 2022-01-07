@@ -77,8 +77,8 @@ public class GameManager : MonoBehaviour
 
     public GameManager()
     {
-        _levels = new string[] { "Level22","Level33","Level44" };
-        _winConditions = new float[] { 1, 2, 3 };
+        _levels = new string[] { "Level11", "Level22","Level33","Level44" };
+        _winConditions = new float[] { 1, 1, 2, 3 };
     }
 
     public bool NearChest
