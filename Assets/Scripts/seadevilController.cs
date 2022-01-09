@@ -35,7 +35,7 @@ public float _moveSpeed = 0.5f;
  float _direction;
  float _prevDirection;
      private Rigidbody2D _fish;
-    private bool _visibility; 
+     
     void Start()
     {
        _fish = GetComponent<Rigidbody2D>();

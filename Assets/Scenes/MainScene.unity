@@ -6875,7 +6875,7 @@ PrefabInstance:
     - target: {fileID: 1085002526, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+      objectReference: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
     - target: {fileID: 1204939936, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -6885,7 +6885,7 @@ PrefabInstance:
       value: "The main purpose is to find a chest with treasure - located in the
         deepest parts of the sea. Sometimes you will need some key (or keys!) to
         open the chest. \r\nLook out on your oxygen level - if you use it all, the
-        game is over. \r\nUse WASD to move (double W activate jetpack).\r\nHave fun!"
+        game is over. \r\nUse WASD to move and space to use jetpack.\r\nHave fun!"
       objectReference: {fileID: 0}
     - target: {fileID: 522218772790247514, guid: 35d797c0fb5685b49b69c5e4b174a0e2, type: 3}
       propertyPath: VelocityModule.enabled

@@ -45,6 +45,7 @@ public class Diver : MonoBehaviour
     public static bool _jetpackUse;
     private static bool _jetpackUsed;
     public static bool WillGroundHitAnim;
+    private bool seaDevilOn;
    [SerializeField] private bool _jumpStart;
 
 
@@ -83,13 +84,13 @@ public class Diver : MonoBehaviour
 
         HorizontalMove = Input.GetAxisRaw("Horizontal");
         VerticalMove = Input.GetAxisRaw("Vertical");
-        if (Input.GetButtonUp("Jump") && !_jumpStart && !EdgeCaught)
+        if (Input.GetButtonUp("Jump") && !_jumpStart && !EdgeCaught && !_jetpackUse && !_jetpackUsed && IsGrounded)
             _jumpStart = true;
         else if(Input.GetButtonUp("Jump") && EdgeCaught && !ClimbingUp)
             ClimbingUp = true;
-       else if (Input.GetButtonUp("Jump")&& !IsGrounded && !UpDoublePress)
+       else if (Input.GetButtonUp("Jetpack") && !_jetpackUse && !_jetpackUsed)
         {
-            UpDoublePress = true;
+            _jetpackUse = true;
         }
 
        
@@ -97,7 +98,7 @@ public class Diver : MonoBehaviour
     void FixedUpdate()
     {
 
-        VerticalPos = _player.position.y - _prevVerticvalPos;
+        VerticalPos =(float)Math.Round((_player.position.y - _prevVerticvalPos)*1000)/1000;
         _prevVerticvalPos = _player.position.y;
         
         GroundCheck();
@@ -130,9 +131,9 @@ public class Diver : MonoBehaviour
             OxygenCounter.Instance.Jetpack = _jetpackUse;
         
         DiverMove();
-        if(UpDoublePress)
+        if(_jetpackUse)
         JetpackUse();
-        BubbleHandling();
+        
     }
 
 
@@ -184,13 +185,17 @@ public class Diver : MonoBehaviour
 
     private void DiverHorizontalMove()
     {
-        if (HorizontalMove > 0 && _player.velocity.x <5 && !RightWallDetect )
+        Vector2 horizontalMoveVector = new Vector2(Movespeed * 0.1f * noGroundMod, 0);
+        if (HorizontalMove > 0 && _player.velocity.x <1.5f && !RightWallDetect )
         {
-            _player.velocity += new Vector2(Movespeed*0.1f*noGroundMod, 0);
+            
+                _player.velocity += Vector2.right + horizontalMoveVector;
+           
+
         }
-        else if (HorizontalMove < 0 &&  _player.velocity.x >-5 && !LeftWallDetect )
+        else if (HorizontalMove < 0 &&  _player.velocity.x >-1.5f && !LeftWallDetect )
         {
-            _player.velocity -= new Vector2(Movespeed*0.1f*noGroundMod, 0);
+            _player.velocity -= Vector2.right + horizontalMoveVector;
         }
         else
         {
@@ -204,19 +209,20 @@ public class Diver : MonoBehaviour
     public void JumpFunction()
     {
         //activated by diveranimationscript
-        _player.velocity += new Vector2(0, 5);
+        _player.velocity += new Vector2(0, 6);
     }
     private void JetpackUse()
     {
         if (!_jetpackUsed)
         {
             _player.velocity += new Vector2(0, 8);
-            _jetpackUse = true;
             _jetpackUsed = true;
         }
 
-        if (_jetpackUsed && VerticalPos < -0.05 || IsGrounded)
+        if (_jetpackUsed && VerticalPos < -0.05 )
         _jetpackUse = false;
+        BubbleHandling();
+
     }
     
     private void GroundCheck()
@@ -281,14 +287,17 @@ public class Diver : MonoBehaviour
 
         if (collision.gameObject.CompareTag("seadevil"))
         {
+            seaDevilOn = true;
             transform.parent = collision.transform;
             IsGrounded = true;
+            noGroundMod = 1f;
         }
 
         if (collision.gameObject.CompareTag("spikes"))
         {
             OxygenCounter.Instance.Damage = true;
             IsGrounded = true;
+            noGroundMod = 1f;
         }
     }
 
@@ -297,6 +306,7 @@ public class Diver : MonoBehaviour
     {
         transform.parent = null;
         IsGrounded = false;
+        seaDevilOn = false;
     }
     private void BubleSound()
     {

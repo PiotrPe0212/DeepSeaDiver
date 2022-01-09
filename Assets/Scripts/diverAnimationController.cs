@@ -18,6 +18,7 @@ public class diverAnimationController : MonoBehaviour
     public static bool _endOfDeathAnim = false;
     private bool _deathSet;
     private bool _edgeCaught;
+    private bool _jumped;
     public AudioSource _stepAudio;
     public AudioSource _fallHitAudio;
     public enum AnimationState { WAITING, WALKING, FALLINIT, FALLING, JUMP, UP, GROUNDHIT, JETPACK, DEATH, CLIMB }
@@ -68,11 +69,13 @@ public class diverAnimationController : MonoBehaviour
             case AnimationState.WAITING:
                 _animator.Play("wait");
                 _diver.ResetAfterJump();
+                _jumped = false;
                 break;
 
             case AnimationState.WALKING:
                 _animator.Play("walk");
                 _diver.ResetAfterJump();
+                _jumped = false;
                 _stepAudio.Play();
                 break;
 
@@ -219,6 +222,9 @@ public class diverAnimationController : MonoBehaviour
             SwitchState(AnimationState.JUMP);
         }
 
+        if (_jetpackUse)
+            SwitchState(AnimationState.JETPACK);
+
         if (_deathSet)
             SwitchState(AnimationState.DEATH);
     }
@@ -241,7 +247,10 @@ public class diverAnimationController : MonoBehaviour
            SwitchState(AnimationState.JUMP);
        }
 
-       if (_deathSet)
+        if (_jetpackUse)
+            SwitchState(AnimationState.JETPACK);
+
+        if (_deathSet)
            SwitchState(AnimationState.DEATH);
 
    }
@@ -332,7 +341,9 @@ public class diverAnimationController : MonoBehaviour
 
             case AnimationState.JUMP:
                 _startJumpAnimation = false;
+                if(!_jumped)
             _diver.JumpFunction();
+                _jumped = true;
                 break;
 
             case AnimationState.UP:
